@@ -14,6 +14,14 @@ function MoneyMaskDirective($locale, $parse, PreFormatters) {
 				symbolSeparation = ' ',
 				decimals = $parse(attrs.uiMoneyMask)(scope);
 
+      function getPrefix(value) {
+        return (angular.isDefined(attrs.uiNegativeNumber) && value < 0) ? '-' : '';
+      }
+
+      function getDecimals(diff) {
+        diff = diff || 0;
+        return new Array(decimals + 1 + diff).join('0');
+      }
 
 			function maskFactory(decimals) {
 				var decimalsPattern = decimals > 0 ? decimalDelimiter + new Array(decimals + 1).join('0') : '';
@@ -46,9 +54,8 @@ function MoneyMaskDirective($locale, $parse, PreFormatters) {
 				if (ctrl.$isEmpty(value)) {
 					return value;
 				}
-				var prefix = (angular.isDefined(attrs.uiNegativeNumber) && value < 0) ? '-' : '';
 				var valueToFormat = PreFormatters.prepareNumberToFormatter(value, decimals);
-				return prefix + currencySym + moneyMask.apply(valueToFormat);
+				return getPrefix(value) + currencySym + moneyMask.apply(valueToFormat);
 			}
 
 			function parser(value) {
@@ -59,7 +66,13 @@ function MoneyMaskDirective($locale, $parse, PreFormatters) {
 				var actualNumber = value.replace(/[^\d]+/g,'');
 				actualNumber = actualNumber.replace(/^[0]+([1-9])/,'$1');
 				actualNumber = actualNumber || '0';
-				var formatedValue = currencySym + moneyMask.apply(actualNumber);
+        
+        if (angular.isDefined(attrs.uiLeftToRight))
+        {
+          return viewValueToModelValue(value);
+        }
+
+        var formatedValue = currencySym + moneyMask.apply(actualNumber);
 
 				if (angular.isDefined(attrs.uiNegativeNumber)) {
 					var isNegative = (value[0] === '-'),
@@ -74,15 +87,54 @@ function MoneyMaskDirective($locale, $parse, PreFormatters) {
 				}
 
 				if (value !== formatedValue) {
-					ctrl.$setViewValue(formatedValue);
+          ctrl.$viewValue = formatedValue;
 					ctrl.$render();
 				}
 
 				return formatedValue ? parseInt(formatedValue.replace(/[^\d\-]+/g,''))/Math.pow(10,decimals) : null;
 			}
 
+      function modelValueToViewValue(modelValue) {
+        modelValue = modelValue.replace('.', decimalDelimiter);
+        return modelValue;
+      } 
+
+      function viewValueToModelValue(viewValue) {
+        viewValue = viewValue.replace(new RegExp('['+getPrefix(viewValue)+currencySym+symbolSeparation+']', 'g'), '');
+        viewValue = viewValue.replace(thousandsDelimiter, '');
+        viewValue = viewValue.replace(decimalDelimiter, '.');
+        return viewValue;
+      }
+
+      function onFocus() {
+        var actualNumber = ctrl.$viewValue;
+        if (actualNumber)
+        {
+          actualNumber = viewValueToModelValue(actualNumber);
+          actualNumber = PreFormatters.clearLastZeros(actualNumber);
+          actualNumber = modelValueToViewValue(actualNumber);
+          ctrl.$viewValue = actualNumber;
+          ctrl.$render();
+        }
+      }
+
+      function onBlur() {
+        var value = ctrl.$viewValue;
+        if (value)
+        {
+          var formatedValue = formatter(ctrl.$modelValue);
+          ctrl.$setViewValue(formatedValue);
+          ctrl.$render();
+        }
+      }
+
 			ctrl.$formatters.push(formatter);
 			ctrl.$parsers.push(parser);
+
+      if (attrs.uiLeftToRight) {
+        element.bind('blur', onBlur);
+        element.bind('focus', onFocus);
+      }
 
 			if (attrs.uiMoneyMask) {
 				scope.$watch(attrs.uiMoneyMask, function(_decimals) {

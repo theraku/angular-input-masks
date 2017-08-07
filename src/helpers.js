@@ -20,9 +20,15 @@ m.factory('PreFormatters', [function() {
 		return clearDelimitersAndLeadingZeros((parseFloat(value)).toFixed(decimals));
 	}
 
+  function clearLastZeros(value) {
+    value = value || 0;
+    return (parseFloat(value)).toString();
+  }
+
 	return {
 		clearDelimitersAndLeadingZeros: clearDelimitersAndLeadingZeros,
-		prepareNumberToFormatter: prepareNumberToFormatter
+		prepareNumberToFormatter: prepareNumberToFormatter,
+    clearLastZeros: clearLastZeros
 	};
 }])
 .factory('NumberMasks', [function() {

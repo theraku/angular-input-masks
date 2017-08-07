@@ -12,7 +12,8 @@
 			.controller('ctrl', function ctrl($scope) {
 				$scope.defaultMoney = 153.12;
 				$scope.moneyStartedWith0 = 0;
-				$scope.moneyInitializedWithString = '3.53';
+        $scope.moneyInitializedWithString = '3.53';
+				$scope.moneyLeftToRight = 45.60;
 			});
 	</script>
 </head>
@@ -25,6 +26,9 @@
 		<span ng-bind="moneyStartedWith0"></span> - {{form.moneyField.$error}}<br>
 		<input type="text" name="moneyField2" ng-model="moneyInitializedWithString" ui-money-mask> <br>
 		<span ng-bind="moneyInitializedWithString"></span> - {{form.moneyField2.$error}}<br>
+    <input type="text" name="moneyField3" ng-model="moneyLeftToRight" ui-money-mask ui-left-to-right="true"> <br>
+    <input type="text" name="moneyField4" ng-model="moneyLeftToRight" ui-money-mask="4" ui-left-to-right="true"> <br>
+    <span ng-bind="moneyLeftToRight"></span> - {{form.moneyField.$error}}<br>
 		<input type="text" name="field15" ng-model="money3Decimals" ui-money-mask="3" min="defaultMoney" max="field16"> <br>
 		<span ng-bind="money3Decimals"></span> - {{form.field15.$error}}<br>
 		<input type="text" name="field16" ng-model="field16" ui-money-mask="0"> <br>
